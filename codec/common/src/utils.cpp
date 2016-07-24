@@ -48,6 +48,8 @@ float WelsCalcPsnr (const void* kpTarPic,
                     const int32_t kiHeight);
 
 
+
+
 void WelsLog (SLogContext* logCtx, int32_t iLevel, const char* kpFmt, ...) {
   va_list vl;
   char pTraceTag[MAX_LOG_SIZE] = {0};

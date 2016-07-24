@@ -225,6 +225,8 @@ inline void    HandleReferenceLostL0 (PWelsDecoderContext pCtx, PNalUnit pCurNal
     pCtx->bReferenceLostAtT0Flag = true;
   }
   pCtx->iErrorCode |= dsBitstreamError;
+
+  //LOGE("fahad--> decoder_core::HandleReferenceLost 229 -- %d", pCtx->iErrorCode);
 }
 
 inline void    HandleReferenceLost (PWelsDecoderContext pCtx, PNalUnit pCurNal) {
@@ -232,6 +234,8 @@ inline void    HandleReferenceLost (PWelsDecoderContext pCtx, PNalUnit pCurNal) 
     pCtx->bReferenceLostAtT0Flag = true;
   }
   pCtx->iErrorCode |= dsRefLost;
+
+  LOGE("fahad--> decoder_core::HandleReferenceLost 238 -- %d", pCtx->iErrorCode);
 }
 
 inline int32_t  WelsDecodeConstructSlice (PWelsDecoderContext pCtx, PNalUnit pCurNal) {
@@ -727,6 +731,9 @@ int32_t ParseSliceHeaderSyntaxs (PWelsDecoderContext pCtx, PBitStringAux pBs, co
                              GENERATE_ERROR_NO (ERR_LEVEL_SLICE_HEADER,
                                  ERR_INFO_PPS_ID_OVERFLOW));
   iPpsId = uiCode;
+  if (pCtx->bPpsAvailFlags[iPpsId] == false) {
+	  iPpsId = uiCode-1;
+  }
 
   //add check PPS available here
   if (pCtx->bPpsAvailFlags[iPpsId] == false) {
@@ -740,6 +747,7 @@ int32_t ParseSliceHeaderSyntaxs (PWelsDecoderContext pCtx, PBitStringAux pBs, co
       pCtx->iPPSInvalidNum++;
     }
     pCtx->iErrorCode |= dsNoParamSets;
+	LOGE("fahad-->> decoder_core --747 --error iErrorCode %d  pCtx->bPpsAvailFlags[iPpsId] %d  -- pCtx->bPpsAvailFlags[iPpsId-1] %d  -- pCtx->bPpsAvailFlags[iPpsId-2]", pCtx->iErrorCode, pCtx->bPpsAvailFlags[iPpsId], pCtx->bPpsAvailFlags[iPpsId-1], pCtx->bPpsAvailFlags[iPpsId-2]);
     return GENERATE_ERROR_NO (ERR_LEVEL_SLICE_HEADER, ERR_INFO_INVALID_PPS_ID);
   }
   pCtx->iPPSLastInvalidId = -1;
@@ -748,7 +756,9 @@ int32_t ParseSliceHeaderSyntaxs (PWelsDecoderContext pCtx, PBitStringAux pBs, co
 
   if (pPps->uiNumSliceGroups == 0) {
     WelsLog (pLogCtx, WELS_LOG_WARNING, "Invalid PPS referenced");
+	
     pCtx->iErrorCode |= dsNoParamSets;
+	LOGE("fahad-->> decoder_core --756 --error iErrorCode %d ", pCtx->iErrorCode);
     return GENERATE_ERROR_NO (ERR_LEVEL_SLICE_HEADER, ERR_INFO_NO_PARAM_SETS);
   }
 
@@ -766,6 +776,7 @@ int32_t ParseSliceHeaderSyntaxs (PWelsDecoderContext pCtx, PBitStringAux pBs, co
         pCtx->iSubSPSInvalidNum++;
       }
       pCtx->iErrorCode |= dsNoParamSets;
+	  LOGE("fahad-->> decoder_core --776 --error iErrorCode %d ", pCtx->iErrorCode);
       return GENERATE_ERROR_NO (ERR_LEVEL_SLICE_HEADER, ERR_INFO_INVALID_SPS_ID);
     }
     pCtx->iSubSPSLastInvalidId = -1;
@@ -781,6 +792,7 @@ int32_t ParseSliceHeaderSyntaxs (PWelsDecoderContext pCtx, PBitStringAux pBs, co
         pCtx->iSPSInvalidNum++;
       }
       pCtx->iErrorCode |= dsNoParamSets;
+	  LOGE("fahad-->> decoder_core --792 --error iErrorCode %d ", pCtx->iErrorCode);
       return GENERATE_ERROR_NO (ERR_LEVEL_SLICE_HEADER, ERR_INFO_INVALID_SPS_ID);
     }
     pCtx->iSPSLastInvalidId = -1;
@@ -2069,6 +2081,7 @@ void WelsDqLayerDecodeStart (PWelsDecoderContext pCtx, PNalUnit pCurNal, PSps pS
 
 int32_t InitRefPicList (PWelsDecoderContext pCtx, const uint8_t kuiNRi, int32_t iPoc) {
   int32_t iRet = ERR_NONE;
+  LOGE("fahad-->> decoder::InitRefPicLIst 2076");
   iRet = WelsInitRefList (pCtx, iPoc);
   if ((pCtx->eSliceType != I_SLICE && pCtx->eSliceType != SI_SLICE)) {
     iRet = WelsReorderRefList (pCtx);
@@ -2258,14 +2271,16 @@ int32_t DecodeCurrentAccessUnit (PWelsDecoderContext pCtx, uint8_t** ppDst, SBuf
           }
         }
 
-        if (iCurrIdD == kuiDependencyIdMax && iCurrIdQ == BASE_QUALITY_ID) {
+        if (iCurrIdD == kuiDependencyIdMax ) {//&& iCurrIdQ == BASE_QUALITY_ID
           iRet = InitRefPicList (pCtx, uiNalRefIdc, pSh->iPicOrderCntLsb);
+		  LOGE("Decoder current access unit 2268 iRect -- %d", iRet);
           if (iRet) {
+			 
             pCtx->bRPLRError = true;
             bAllRefComplete = false; // RPLR error, set ref pictures complete flag false
             HandleReferenceLost (pCtx, pNalCur);
-            WelsLog (& (pCtx->sLogCtx), WELS_LOG_DEBUG,
-                     "reference picture introduced by this frame is lost during transmission! uiTId: %d",
+            //WelsLog (& (pCtx->sLogCtx), WELS_LOG_DEBUG,
+			LOGE("reference picture introduced by this frame is lost during transmission! uiTId: %d",
                      pNalCur->sNalHeaderExt.uiTemporalId);
             if (pCtx->eErrorConMethod == ERROR_CON_DISABLE) {
               if (pCtx->iTotalNumMbRec == 0)

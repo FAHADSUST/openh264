@@ -445,19 +445,22 @@ DECODING_STATE CWelsDecoder::DecodeFrame2 (const unsigned char* kpSrc,
     const int kiSrcLen,
     unsigned char** ppDst,
     SBufferInfo* pDstInfo) {
+
   if (m_pDecContext == NULL || m_pDecContext->pParam == NULL) {
     if (m_pWelsTrace != NULL) {
-      WelsLog (&m_pWelsTrace->m_sLogCtx, WELS_LOG_ERROR, "Call DecodeFrame2 without Initialize.\n");
+      LOGE("Call DecodeFrame2 without Initialize.\n");
     }
+
     return dsInitialOptExpected;
   }
 
   if (m_pDecContext->pParam->bParseOnly) {
-    WelsLog (&m_pWelsTrace->m_sLogCtx, WELS_LOG_ERROR, "bParseOnly should be false for this API calling! \n");
+	  LOGE("bParseOnly should be false for this API calling! \n");
     m_pDecContext->iErrorCode |= dsInvalidArgument;
     return dsInvalidArgument;
   }
   if (CheckBsBuffer (m_pDecContext, kiSrcLen)) {
+	  LOGE("ds out of memory");
     return dsOutOfMemory;
   }
   if (kiSrcLen > 0 && kpSrc != NULL) {
@@ -482,7 +485,7 @@ DECODING_STATE CWelsDecoder::DecodeFrame2 (const unsigned char* kpSrc,
   int64_t iStart, iEnd;
   iStart = WelsTime();
   ppDst[0] = ppDst[1] = ppDst[2] = NULL;
-  m_pDecContext->iErrorCode             = dsErrorFree; //initialize at the starting of AU decoding.
+  m_pDecContext->iErrorCode = dsErrorFree;//initialize at the starting of AU decoding.
   m_pDecContext->iFeedbackVclNalInAu = FEEDBACK_UNKNOWN_NAL; //initialize
   unsigned long long uiInBsTimeStamp = pDstInfo->uiInBsTimeStamp;
   memset (pDstInfo, 0, sizeof (SBufferInfo));
@@ -504,6 +507,7 @@ DECODING_STATE CWelsDecoder::DecodeFrame2 (const unsigned char* kpSrc,
   WelsDecodeBs (m_pDecContext, kpSrc, kiSrcLen, ppDst,
                 pDstInfo, NULL); //iErrorCode has been modified in this function
   m_pDecContext->bInstantDecFlag = false; //reset no-delay flag
+  //m_pDecContext->iErrorCode = dsErrorFree;
   if (m_pDecContext->iErrorCode) {
     EWelsNalUnitType eNalType =
       NAL_UNIT_UNSPEC_0; //for NBR, IDR frames are expected to decode as followed if error decoding an IDR currently
@@ -511,8 +515,12 @@ DECODING_STATE CWelsDecoder::DecodeFrame2 (const unsigned char* kpSrc,
     eNalType = m_pDecContext->sCurNalHead.eNalUnitType;
 
     if (m_pDecContext->iErrorCode & dsOutOfMemory) {
-      if (ResetDecoder())
-        return dsOutOfMemory;
+		if (ResetDecoder()){
+			LOGE("2. ds out of memory");
+			return dsOutOfMemory;
+			
+		}
+        
     }
     //for AVC bitstream (excluding AVC with temporal scalability, including TP), as long as error occur, SHOULD notify upper layer key frame loss.
     if ((IS_PARAM_SETS_NALS (eNalType) || NAL_UNIT_CODED_SLICE_IDR == eNalType) ||
@@ -527,13 +535,13 @@ DECODING_STATE CWelsDecoder::DecodeFrame2 (const unsigned char* kpSrc,
     }
 
     if (m_pDecContext->bPrintFrameErrorTraceFlag) {
-      WelsLog (&m_pWelsTrace->m_sLogCtx, WELS_LOG_INFO, "decode failed, failure type:%d \n",
+		LOGE("decode failed, failure type:%d \n",
                m_pDecContext->iErrorCode);
       m_pDecContext->bPrintFrameErrorTraceFlag = false;
     } else {
       m_pDecContext->iIgnoredErrorInfoPacketCount ++;
       if (m_pDecContext->iIgnoredErrorInfoPacketCount == INT_MAX) {
-        WelsLog (&m_pWelsTrace->m_sLogCtx, WELS_LOG_WARNING, "continuous error reached INT_MAX! Restart as 0.");
+		  LOGE("continuous error reached INT_MAX! Restart as 0.");
         m_pDecContext->iIgnoredErrorInfoPacketCount = 0;
       }
     }
@@ -571,6 +579,8 @@ DECODING_STATE CWelsDecoder::DecodeFrame2 (const unsigned char* kpSrc,
     }
     iEnd = WelsTime();
     m_pDecContext->dDecTime += (iEnd - iStart) / 1e3;
+
+	LOGE("fahd--> welsDecoderExt :: 580 error code %d", (DECODING_STATE)m_pDecContext->iErrorCode);
     return (DECODING_STATE) m_pDecContext->iErrorCode;
   }
   // else Error free, the current codec works well
@@ -592,6 +602,8 @@ DECODING_STATE CWelsDecoder::DecodeFrame2 (const unsigned char* kpSrc,
   }
   iEnd = WelsTime();
   m_pDecContext->dDecTime += (iEnd - iStart) / 1e3;
+
+  LOGE("fahad--> 604 2. ds out of memory %d",dsErrorFree);
   return dsErrorFree;
 }
 
@@ -679,6 +691,8 @@ DECODING_STATE CWelsDecoder::DecodeFrame (const unsigned char* kpSrc,
     iWidth     = DstInfo.UsrData.sSystemBuffer.iWidth;
     iHeight    = DstInfo.UsrData.sSystemBuffer.iHeight;
   }
+
+  LOGE("fahad---->>> log decodeFrame2 error %d", eDecState);
 
   return eDecState;
 }

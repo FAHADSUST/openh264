@@ -313,7 +313,7 @@ inline void WelsSetMemMultiplebytes_c (void* pDst, uint32_t iValue, int32_t iSiz
       WelsSetMemUint16_c (static_cast<uint16_t*> (pDst), static_cast<uint16_t> (iValue), iSizeOfData);
     } else {
       memset (static_cast<uint8_t*> (pDst), static_cast<uint8_t> (iValue), iSizeOfData);
-    }
+	}
   } else {
     memset (static_cast<uint8_t*> (pDst), 0, iSizeOfData * iDataLengthOfData);
   }

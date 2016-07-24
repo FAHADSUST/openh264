@@ -25,7 +25,7 @@ CXX_O=-Fo$@
 CFLAGS += -nologo -W3 -EHsc -fp:precise -Zc:wchar_t -Zc:forScope -D_VARIADIC_MAX=10
 CXX_LINK_O=-nologo -Fe$@
 AR_OPTS=-nologo -out:$@
-CFLAGS_OPT=-O2 -Ob1 -Oy- -Zi -GF -Gm- -GS -Gy -DNDEBUG
+CFLAGS_OPT=-O2 -Ob1 -Oy- -Zi -GF -Gm- -GS -Gy -DNDEBUG -llog
 CFLAGS_DEBUG=-Od -Oy- -Zi -RTC1 -D_DEBUG
 CFLAGS_M32=
 CFLAGS_M64=

@@ -50,6 +50,18 @@
 // wels log output
 typedef void (*PWelsLogCallbackFunc) (void* pCtx, const int32_t iLevel, const char* kpFmt, va_list argv);
 
+
+#ifdef ANDROID_NDK
+
+#include <android/log.h>
+
+#define LOG_TAG "LibraryLog"
+//#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
+#define LOGE(...)
+#else
+#define LOGE(...)
+#endif
+
 typedef struct TagLogContext {
   PWelsLogCallbackFunc pfLog;
   void* pLogCtx;

@@ -151,6 +151,8 @@ int32_t WelsInitRefList (PWelsDecoderContext pCtx, int32_t iPoc) {
       } else {
         WelsLog (& (pCtx->sLogCtx), WELS_LOG_ERROR, "WelsInitRefList()::PrefetchPic for EC errors.");
         pCtx->iErrorCode |= dsOutOfMemory;
+
+		LOGE("fahad--> manage_dec_ref::WelsInitRefList 156 -- %d", ERR_INFO_REF_COUNT_OVERFLOW);
         return ERR_INFO_REF_COUNT_OVERFLOW;
       }
     }
@@ -170,6 +172,7 @@ int32_t WelsInitRefList (PWelsDecoderContext pCtx, int32_t iPoc) {
   }
   pCtx->sRefPic.uiRefCount[LIST_0] = iCount;
 
+  LOGE("fahad--> manage_dec_ref::WelsInitRefList 175 -- %d", ERR_NONE);
   return ERR_NONE;
 }
 
@@ -186,13 +189,17 @@ int32_t WelsReorderRefList (PWelsDecoderContext pCtx) {
   int32_t iAbsDiffPicNum = -1;
   int32_t iReorderingIndex = 0;
   int32_t i = 0;
+  int32_t iRefFrameForMissFramePrediction = 0;
 
   if (pCtx->eSliceType == I_SLICE || pCtx->eSliceType == SI_SLICE) {
+	  LOGE("fahad-->> manage_dec_dec_ref::WelsReorderRefList 194 ERR_NONE -- %d", ERR_NONE);
     return ERR_NONE;
   }
 
   if (iRefCount <= 0) {
     pCtx->iErrorCode = dsNoParamSets; //No any reference for decoding, SHOULD request IDR
+
+	LOGE("fahad-->> manage_dec_dec_ref::WelsReorderRefList 201 ERR_INFO_REFERENCE_PIC_LOST -- %d", ERR_INFO_REFERENCE_PIC_LOST);
     return ERR_INFO_REFERENCE_PIC_LOST;
   }
 
@@ -202,6 +209,8 @@ int32_t WelsReorderRefList (PWelsDecoderContext pCtx) {
       uint16_t uiReorderingOfPicNumsIdc =
         pRefPicListReorderSyn->sReorderingSyn[LIST_0][iReorderingIndex].uiReorderingOfPicNumsIdc;
       if (uiReorderingOfPicNumsIdc < 2) {
+
+		  LOGE("fahad-->> manage_dec_dec_ref::WelsReorderRefList 212 %d", i);
         iAbsDiffPicNum = pRefPicListReorderSyn->sReorderingSyn[LIST_0][iReorderingIndex].uiAbsDiffPicNumMinus1 + 1;
 
         if (uiReorderingOfPicNumsIdc == 0) {
@@ -211,22 +220,55 @@ int32_t WelsReorderRefList (PWelsDecoderContext pCtx) {
         }
         iPredFrameNum &= iMaxPicNum - 1;
 
+		bool isMiss = true;
         for (i = iMaxRefIdx - 1; i >= 0; i--) {
-          if (ppRefList[i] != NULL && ppRefList[i]->iFrameNum == iPredFrameNum && !ppRefList[i]->bIsLongRef) {
+			if (ppRefList[i] != NULL) LOGE("fahad-->> manage_dec_dec_ref::WelsReorderRefList 224 %d iMaxRefIdx-1 %d   ppRefList[i]->iFrameNum %d , iPredFrameNum %d , ppRefList[i]->bIsLongRef %d", i, iMaxRefIdx - 1, ppRefList[i]->iFrameNum, iPredFrameNum, ppRefList[i]->bIsLongRef);
+          
+			if (ppRefList[i] != NULL && ppRefList[i]->iFrameNum == iPredFrameNum && !ppRefList[i]->bIsLongRef) {
+				isMiss = false;
+				iRefFrameForMissFramePrediction = iPredFrameNum;
+			  LOGE("fahad-->> manage_dec_dec_ref::WelsReorderRefList 224 break  %d", i);
             if ((pNalHeaderExt->uiQualityId == ppRefList[i]->uiQualityId)
                 && (pSliceHeader->iSpsId != ppRefList[i]->iSpsId)) {   //check;
               WelsLog (& (pCtx->sLogCtx), WELS_LOG_WARNING, "WelsReorderRefList()::::BASE LAYER::::iSpsId:%d, ref_sps_id:%d",
                        pSliceHeader->iSpsId, ppRefList[i]->iSpsId);
               pCtx->iErrorCode = dsNoParamSets; //cross-IDR reference frame selection, SHOULD request IDR.--
+			  LOGE("fahad-->> manage_dec_dec_ref::WelsReorderRefList 227 ERR_INFO_REFERENCE_PIC_LOST -- %d", ERR_INFO_REFERENCE_PIC_LOST);
               return ERR_INFO_REFERENCE_PIC_LOST;
             } else {
+				LOGE("fahad-->> manage_dec_dec_ref::WelsReorderRefList 233 break %d", i);
               break;
             }
-          }
+
+			}
+			
         }
 
+		if (isMiss)
+		{
+			i = 0;
+			iPredFrameNum = iRefFrameForMissFramePrediction;
+			ppRefList[i]->iFrameNum = iRefFrameForMissFramePrediction;
+			if (ppRefList[i] != NULL) {
+				LOGE("fahad-->> manage_dec_dec_ref::WelsReorderRefList 249 ************** %d iMaxRefIdx-1 %d   ppRefList[i]->iFrameNum %d , iPredFrameNum %d , ppRefList[i]->bIsLongRef %d", i, iMaxRefIdx - 1, ppRefList[i]->iFrameNum, iPredFrameNum, ppRefList[i]->bIsLongRef);
+			}
+			else{
+				LOGE("fahad-->> manage_dec_dec_ref::WelsReorderRefList 252 null **************** %d", i);
+			}
+		}
+		else{
+			if (ppRefList[i] != NULL) {
+				LOGE("fahad-->> manage_dec_dec_ref::WelsReorderRefList 547 *___************* %d iMaxRefIdx-1 %d   ppRefList[i]->iFrameNum %d , iPredFrameNum %d , ppRefList[i]->bIsLongRef %d", i, iMaxRefIdx - 1, ppRefList[i]->iFrameNum, iPredFrameNum, ppRefList[i]->bIsLongRef);
+			}
+			else{
+				LOGE("fahad-->> manage_dec_dec_ref::WelsReorderRefList 260 null ****_____************ %d", i);
+			}
+		}
+
       } else if (uiReorderingOfPicNumsIdc == 2) {
+		  LOGE("fahad-->> manage_dec_dec_ref::WelsReorderRefList 241  %d", i);
         for (i = iMaxRefIdx - 1; i >= 0; i--) {
+			LOGE("fahad-->> manage_dec_dec_ref::WelsReorderRefList 243  %d", i);
           if (ppRefList[i] != NULL && ppRefList[i]->bIsLongRef
               && ppRefList[i]->iLongTermFrameIdx ==
               pRefPicListReorderSyn->sReorderingSyn[LIST_0][iReorderingIndex].uiLongTermPicNum) {
@@ -235,14 +277,18 @@ int32_t WelsReorderRefList (PWelsDecoderContext pCtx) {
               WelsLog (& (pCtx->sLogCtx), WELS_LOG_WARNING, "WelsReorderRefList()::::BASE LAYER::::iSpsId:%d, ref_sps_id:%d",
                        pSliceHeader->iSpsId, ppRefList[i]->iSpsId);
               pCtx->iErrorCode = dsNoParamSets; //cross-IDR reference frame selection, SHOULD request IDR.--
+
+			  LOGE("fahad-->> manage_dec_dec_ref::WelsReorderRefList 246 ERR_INFO_REFERENCE_PIC_LOST -- %d", ERR_INFO_REFERENCE_PIC_LOST);
               return ERR_INFO_REFERENCE_PIC_LOST;
             } else {
+
               break;
             }
           }
         }
       }
       if (i < 0) {
+		  LOGE("fahad-->> manage_dec_dec_ref::WelsReorderRefList 255 ERR_INFO_REFERENCE_PIC_LOST -- %d %d", ERR_INFO_REFERENCE_PIC_LOST, i);
         return ERR_INFO_REFERENCE_PIC_LOST;
       }
       pPic = ppRefList[i];
@@ -257,6 +303,7 @@ int32_t WelsReorderRefList (PWelsDecoderContext pCtx) {
       iReorderingIndex++;
     }
   }
+  LOGE("fahad-->> manage_dec_dec_ref::WelsReorderRefList 270 ERR_NONE -- %d", ERR_NONE);
   return ERR_NONE;
 }
 

@@ -135,6 +135,7 @@ uint8_t* ParseNalHeader (PWelsDecoderContext pCtx, SNalUnitHeader* pNalUnitHeade
   pNalUnitHeader->uiForbiddenZeroBit = (uint8_t) (pNal[0] >> 7); // uiForbiddenZeroBit
   if (pNalUnitHeader->uiForbiddenZeroBit) { //2010.4.14
     pCtx->iErrorCode |= dsBitstreamError;
+	LOGE("fahad-->> au_parser --138 --error iErrorCode %d -- dsBitstreamError  %d", pCtx->iErrorCode, dsBitstreamError);
     return NULL; //uiForbiddenZeroBit should always equal to 0
   }
 
@@ -155,6 +156,8 @@ uint8_t* ParseNalHeader (PWelsDecoderContext pCtx, SNalUnitHeader* pNalUnitHeade
       pCtx->iSpsErrorIgnored++;
     }
     pCtx->sDecoderStatistics.iSpsNoExistNalNum++;
+
+	LOGE("fahad-->> au_parser --160 --error iErrorCode %d -- dsNoParamSets  %d", pCtx->iErrorCode, dsNoParamSets);
     pCtx->iErrorCode = dsNoParamSets;
     return NULL;
   }
@@ -169,6 +172,8 @@ uint8_t* ParseNalHeader (PWelsDecoderContext pCtx, SNalUnitHeader* pNalUnitHeade
       pCtx->iPpsErrorIgnored++;
     }
     pCtx->sDecoderStatistics.iPpsNoExistNalNum++;
+
+	LOGE("fahad-->> au_parser --176 --error iErrorCode %d -- dsNoParamSets  %d", pCtx->iErrorCode, dsNoParamSets);
     pCtx->iErrorCode = dsNoParamSets;
     return NULL;
   }
@@ -184,6 +189,8 @@ uint8_t* ParseNalHeader (PWelsDecoderContext pCtx, SNalUnitHeader* pNalUnitHeade
       pCtx->iSubSpsErrorIgnored++;
     }
     pCtx->sDecoderStatistics.iSubSpsNoExistNalNum++;
+
+	LOGE("fahad-->> au_parser --193 --error iErrorCode %d -- dsNoParamSets  %d", pCtx->iErrorCode, dsNoParamSets);
     pCtx->iErrorCode    |= dsNoParamSets;
     return NULL;
   }
@@ -213,6 +220,8 @@ uint8_t* ParseNalHeader (PWelsDecoderContext pCtx, SNalUnitHeader* pNalUnitHeade
         }
       }
       pCurNal->sNalData.sPrefixNal.bPrefixNalCorrectFlag = false;
+
+	  LOGE("fahad-->> au_parser --224 --error iErrorCode %d -- dsNoParamSets  %d", pCtx->iErrorCode, dsBitstreamError);
       pCtx->iErrorCode |= dsBitstreamError;
       return NULL;
     }
@@ -232,6 +241,8 @@ uint8_t* ParseNalHeader (PWelsDecoderContext pCtx, SNalUnitHeader* pNalUnitHeade
         }
       }
       pCurNal->sNalData.sPrefixNal.bPrefixNalCorrectFlag = false;
+
+	  LOGE("fahad-->> au_parser --245 --error iErrorCode %d -- dsNoParamSets  %d", pCtx->iErrorCode, dsBitstreamError);
       pCtx->iErrorCode |= dsBitstreamError;
       return NULL;
     }
@@ -250,6 +261,8 @@ uint8_t* ParseNalHeader (PWelsDecoderContext pCtx, SNalUnitHeader* pNalUnitHeade
       iErr = DecInitBits (pBs, pNal, iBitSize);
       if (iErr) {
         WelsLog (pLogCtx, WELS_LOG_ERROR, "NAL_UNIT_PREFIX: DecInitBits() fail due invalid access.");
+
+		LOGE("fahad-->> au_parser --265 --error iErrorCode %d -- dsNoParamSets  %d", pCtx->iErrorCode, dsBitstreamError);
         pCtx->iErrorCode |= dsBitstreamError;
         return NULL;
       }
@@ -267,6 +280,7 @@ uint8_t* ParseNalHeader (PWelsDecoderContext pCtx, SNalUnitHeader* pNalUnitHeade
     pCurNal = MemGetNextNal (&pCtx->pAccessUnitList, pCtx->pMemAlign);
     if (NULL == pCurNal) {
       WelsLog (pLogCtx, WELS_LOG_ERROR, "MemGetNextNal() fail due out of memory.");
+	  LOGE("fahad-->> au_parser --283 --error iErrorCode %d -- dsNoParamSets  %d", pCtx->iErrorCode, dsOutOfMemory);
       pCtx->iErrorCode |= dsOutOfMemory;
       return NULL;
     }
@@ -288,6 +302,8 @@ uint8_t* ParseNalHeader (PWelsDecoderContext pCtx, SNalUnitHeader* pNalUnitHeade
             pCtx->bAuReadyFlag = true;
           }
         }
+
+		LOGE("fahad-->> au_parser --306 --error iErrorCode %d -- dsBitstreamError  %d", pCtx->iErrorCode, dsBitstreamError);
         pCtx->iErrorCode |= dsBitstreamError;
         return NULL;
       }
@@ -310,6 +326,8 @@ uint8_t* ParseNalHeader (PWelsDecoderContext pCtx, SNalUnitHeader* pNalUnitHeade
             pCtx->bAuReadyFlag = true;
           }
         }
+
+		LOGE("fahad-->> au_parser --330 --error iErrorCode %d -- dsBitstreamError  %d", pCtx->iErrorCode, dsBitstreamError);
         pCtx->iErrorCode |= dsBitstreamError;
         return NULL;
       }
@@ -386,10 +404,15 @@ uint8_t* ParseNalHeader (PWelsDecoderContext pCtx, SNalUnitHeader* pNalUnitHeade
         }
       }
       WelsLog (pLogCtx, WELS_LOG_ERROR, "NAL_UNIT_CODED_SLICE: DecInitBits() fail due invalid access.");
+	  LOGE("fahad-->> au_parser --407 --error iErrorCode %d -- dsBitstreamError  %d", pCtx->iErrorCode, dsBitstreamError);
       pCtx->iErrorCode |= dsBitstreamError;
       return NULL;
     }
+
+	LOGE("fahad-->> au_parser --412 --error iErrorCode %d -- iErr  %d", pCtx->iErrorCode, iErr);
     iErr = ParseSliceHeaderSyntaxs (pCtx, pBs, bExtensionFlag);
+
+	LOGE("fahad-->> au_parser --415 --error iErrorCode %d -- iErr  %d", pCtx->iErrorCode, iErr);
     if (iErr != ERR_NONE) {
       if ((uiAvailNalNum == 1) && (pCurNal->sNalHeaderExt.bIdrFlag)) { //IDR parse error
         ResetActiveSPSForEachLayer (pCtx);
@@ -404,6 +427,8 @@ uint8_t* ParseNalHeader (PWelsDecoderContext pCtx, SNalUnitHeader* pNalUnitHeade
           pCtx->bAuReadyFlag = true;
         }
       }
+
+	  LOGE("fahad-->> au_parser --427 --error iErrorCode %d -- dsBitstreamError  %d", pCtx->iErrorCode, dsBitstreamError);
       pCtx->iErrorCode |= dsBitstreamError;
       return NULL;
     }

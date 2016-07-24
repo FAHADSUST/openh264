@@ -635,6 +635,8 @@ int32_t WelsDecodeBs (PWelsDecoderContext pCtx, const uint8_t* kpBsBuf, const in
     if (NULL == DetectStartCodePrefix (kpBsBuf, &iOffset,
                                        kiBsLen)) {  //CAN'T find the 00 00 01 start prefix from the source buffer
       pCtx->iErrorCode |= dsBitstreamError;
+
+	  LOGE("decode::decodebs --639-- > %d", dsBitstreamError);
       return dsBitstreamError;
     }
 
@@ -659,13 +661,19 @@ int32_t WelsDecodeBs (PWelsDecoderContext pCtx, const uint8_t* kpBsBuf, const in
 
     while (iSrcConsumed < iSrcLength) {
       if ((2 + iSrcConsumed < iSrcLength) && (0 == LD16 (pSrcNal + iSrcIdx)) && (pSrcNal[2 + iSrcIdx] <= 0x03)) {
+
+		LOGE("decode::decodebs -- rpevkdfjdfjk -- 665");
         if (bNalStartBytes && (pSrcNal[2 + iSrcIdx] != 0x00 && pSrcNal[2 + iSrcIdx] != 0x01)) {
           pCtx->iErrorCode |= dsBitstreamError;
+
+		  LOGE("decode::decodebs --665-- > %d", pCtx->iErrorCode);
           return pCtx->iErrorCode;
         }
 
         if (pSrcNal[2 + iSrcIdx] == 0x02) {
           pCtx->iErrorCode |= dsBitstreamError;
+
+		  LOGE("decode::decodebs --674-- > %d", pCtx->iErrorCode);
           return pCtx->iErrorCode;
         } else if (pSrcNal[2 + iSrcIdx] == 0x00) {
           pDstNal[iDstIdx++] = pSrcNal[iSrcIdx++];
@@ -674,6 +682,8 @@ int32_t WelsDecodeBs (PWelsDecoderContext pCtx, const uint8_t* kpBsBuf, const in
         } else if (pSrcNal[2 + iSrcIdx] == 0x03) {
           if ((3 + iSrcConsumed < iSrcLength) && pSrcNal[3 + iSrcIdx] > 0x03) {
             pCtx->iErrorCode |= dsBitstreamError;
+
+			LOGE("decode::decodebs --684-- > %d", pCtx->iErrorCode);
             return pCtx->iErrorCode;
           } else {
             ST16 (pDstNal + iDstIdx, 0);
@@ -706,6 +716,8 @@ int32_t WelsDecodeBs (PWelsDecoderContext pCtx, const uint8_t* kpBsBuf, const in
             pCtx->bReferenceLostAtT0Flag = true;
 #endif
             if (dsOutOfMemory & pCtx->iErrorCode) {
+
+				LOGE("decode::decodebs --718-- > %d", pCtx->iErrorCode);
               return pCtx->iErrorCode;
             }
           }
@@ -718,6 +730,8 @@ int32_t WelsDecodeBs (PWelsDecoderContext pCtx, const uint8_t* kpBsBuf, const in
               pCtx->bReferenceLostAtT0Flag = true;
 #endif
             }
+
+			LOGE("decode::decodebs --733-- > %d", pCtx->iErrorCode);
             return pCtx->iErrorCode;
           }
 
@@ -741,21 +755,33 @@ int32_t WelsDecodeBs (PWelsDecoderContext pCtx, const uint8_t* kpBsBuf, const in
 
     //last NAL decoding
 
+	LOGE("decode::decodebs -Iframe MIss test -758-- >iErrorCode %d -- dsOutOfMemory %d -- dsNoParamSets %d", pCtx->iErrorCode, dsOutOfMemory, dsNoParamSets);
+
     iConsumedBytes = 0;
     pDstNal[iDstIdx] = pDstNal[iDstIdx + 1] = pDstNal[iDstIdx + 2] = pDstNal[iDstIdx + 3] =
                          0; // set 4 reserved bytes to zero
     pRawData->pCurPos = pDstNal + iDstIdx + 4; //init, increase 4 reserved zero bytes, used to store the next NAL
     pNalPayload = ParseNalHeader (pCtx, &pCtx->sCurNalHead, pDstNal, iDstIdx, pSrcNal - 3, iSrcIdx + 3, &iConsumedBytes);
+
+	LOGE("decode::decodebs -Iframe MIss test -766-- >iErrorCode %d -- dsOutOfMemory %d -- dsNoParamSets %d", pCtx->iErrorCode, dsOutOfMemory, dsNoParamSets);
     if (pNalPayload) { //parse correct
+		LOGE("decode::decodebs -Iframe MIss test -768-- >iErrorCode %d -- dsOutOfMemory %d -- dsNoParamSets %d", pCtx->iErrorCode, dsOutOfMemory, dsNoParamSets);
       if (IS_PARAM_SETS_NALS (pCtx->sCurNalHead.eNalUnitType)) {
         iRet = ParseNonVclNal (pCtx, pNalPayload, iDstIdx - iConsumedBytes, pSrcNal - 3, iSrcIdx + 3);
       }
+	  LOGE("decode::decodebs -Iframe MIss test -772-- >iErrorCode %d -- dsOutOfMemory %d -- dsNoParamSets %d", pCtx->iErrorCode, dsOutOfMemory, dsNoParamSets);
       CheckAndFinishLastPic (pCtx, ppDst, pDstBufInfo);
+	  LOGE("decode::decodebs -Iframe MIss test -774-- >iErrorCode %d -- dsOutOfMemory %d -- dsNoParamSets %d", pCtx->iErrorCode, dsOutOfMemory, dsNoParamSets);
       if (pCtx->bAuReadyFlag && pCtx->pAccessUnitList->uiAvailUnitsNum != 0) {
+		  LOGE("decode::decodebs -Iframe MIss test -776-- >iErrorCode %d -- dsOutOfMemory %d -- dsNoParamSets %d", pCtx->iErrorCode, dsOutOfMemory, dsNoParamSets);
         ConstructAccessUnit (pCtx, ppDst, pDstBufInfo);
       }
+
+	  LOGE("decode::decodebs -Iframe MIss test -780-- >iErrorCode %d -- dsOutOfMemory %d -- dsNoParamSets %d", pCtx->iErrorCode, dsOutOfMemory, dsNoParamSets);
     }
+	LOGE("decode::decodebs -Iframe MIss test -782-- >iErrorCode %d -- dsOutOfMemory %d -- dsNoParamSets %d", pCtx->iErrorCode, dsOutOfMemory, dsNoParamSets);
     DecodeFinishUpdate (pCtx);
+	LOGE("decode::decodebs -Iframe MIss test -784-- >iErrorCode %d -- dsOutOfMemory %d -- dsNoParamSets %d", pCtx->iErrorCode, dsOutOfMemory, dsNoParamSets);
 
     if ((dsOutOfMemory | dsNoParamSets) & pCtx->iErrorCode) {
 #ifdef LONG_TERM_REF
@@ -763,6 +789,8 @@ int32_t WelsDecodeBs (PWelsDecoderContext pCtx, const uint8_t* kpBsBuf, const in
 #else
       pCtx->bReferenceLostAtT0Flag = true;
 #endif
+
+	  LOGE("decode::decodebs --779-- > %d", pCtx->iErrorCode);
       return pCtx->iErrorCode;
     }
     if (iRet) {
@@ -774,6 +802,7 @@ int32_t WelsDecodeBs (PWelsDecoderContext pCtx, const uint8_t* kpBsBuf, const in
         pCtx->bReferenceLostAtT0Flag = true;
 #endif
       }
+	  LOGE("decode::decodebs --791-- > %d", pCtx->iErrorCode);
       return pCtx->iErrorCode;
     }
   } else { /* no supplementary picture payload input, but stored a picture */
@@ -781,6 +810,7 @@ int32_t WelsDecodeBs (PWelsDecoderContext pCtx, const uint8_t* kpBsBuf, const in
       pCtx->pAccessUnitList; // current access unit, it will never point to NULL after decode's successful initialization
 
     if (pCurAu->uiAvailUnitsNum == 0) {
+		LOGE("decode::decodebs --799-- > %d", pCtx->iErrorCode);
       return pCtx->iErrorCode;
     } else {
       pCtx->pAccessUnitList->uiEndPos = pCtx->pAccessUnitList->uiAvailUnitsNum - 1;
@@ -795,10 +825,11 @@ int32_t WelsDecodeBs (PWelsDecoderContext pCtx, const uint8_t* kpBsBuf, const in
 #else
       pCtx->bReferenceLostAtT0Flag = true;
 #endif
+	  LOGE("decode::decodebs --814-- > %d", pCtx->iErrorCode);
       return pCtx->iErrorCode;
     }
   }
-
+  LOGE("decode::decodebs --818-- > %d", pCtx->iErrorCode);
   return pCtx->iErrorCode;
 }
 
