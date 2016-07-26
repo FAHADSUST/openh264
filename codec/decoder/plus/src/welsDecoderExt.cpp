@@ -552,12 +552,23 @@ DECODING_STATE CWelsDecoder::DecodeFrame2 (const unsigned char* kpSrc,
 
     int64_t iStart, iEnd;
     iStart = WelsTime();
+    
     ppDst[0] = ppDst[1] = ppDst[2] = NULL;
+    
+    
     m_pDecContext->iErrorCode = dsErrorFree;//initialize at the starting of AU decoding.
     m_pDecContext->iFeedbackVclNalInAu = FEEDBACK_UNKNOWN_NAL; //initialize
+    
+    
     unsigned long long uiInBsTimeStamp = pDstInfo->uiInBsTimeStamp;
+    
+    //printf("uiInBsTimeStamp = %lld\n", uiInBsTimeStamp);
+    
     memset (pDstInfo, 0, sizeof (SBufferInfo));
     pDstInfo->uiInBsTimeStamp = uiInBsTimeStamp;
+    
+    //printf("pDstInfo->uiInBsTimeStamp = %lld\n", pDstInfo->uiInBsTimeStamp);
+    
 #ifdef LONG_TERM_REF
     m_pDecContext->bReferenceLostAtT0Flag       = false; //initialize for LTR
     m_pDecContext->bCurAuContainLtrMarkSeFlag = false;
@@ -575,8 +586,12 @@ DECODING_STATE CWelsDecoder::DecodeFrame2 (const unsigned char* kpSrc,
     {
         m_pDecContext->uiTimeStamp = 0;
     }
+    
+    
     WelsDecodeBs (m_pDecContext, kpSrc, kiSrcLen, ppDst,
                   pDstInfo, NULL); //iErrorCode has been modified in this function
+    
+    
     m_pDecContext->bInstantDecFlag = false; //reset no-delay flag
     //m_pDecContext->iErrorCode = dsErrorFree;
     if (m_pDecContext->iErrorCode)
