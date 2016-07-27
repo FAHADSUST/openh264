@@ -36,6 +36,13 @@
 
 #include "wels_const_common.h"
 
+#define EXISTING_ALGO
+//#define EFFICIENT_ALGO
+//#define MODIFIED_ALGO
+//#define H264_IGNORED_ALGO
+//#define IMPROVEMENT_ADDITION
+//#define IMPROVEMENT_DELETION
+
 /* Some list size */
 
 #define MB_SUB_PARTITION_SIZE           4       // Sub partition size in a 8x8 sub-block

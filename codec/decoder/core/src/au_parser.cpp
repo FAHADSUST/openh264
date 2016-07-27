@@ -63,10 +63,7 @@ namespace WelsDec
  *************************************************************************************
  */
 
-//#define EXISTING_ALGO
-//#define EFFICIENT_ALGO
-//#define MODIFIED_ALGO
-#define H264_IGNORED_ALGO
+
     
 uint8_t* DetectStartCodePrefix (const uint8_t* kpBuf, int32_t* pOffset, int32_t iBufSize)
 {
