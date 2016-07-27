@@ -62,16 +62,19 @@ namespace WelsDec
  * \note    N/A
  *************************************************************************************
  */
-    
-#define MODIFIED_ALGORITHM
+
+//#define EXISTING_ALGO
+//#define EFFICIENT_ALGO
+//#define MODIFIED_ALGO
+#define H264_IGNORED_ALGO
     
 uint8_t* DetectStartCodePrefix (const uint8_t* kpBuf, int32_t* pOffset, int32_t iBufSize)
 {
-#ifdef MODIFIED_ALGORITHM
+#if defined(MODIFIED_ALGO)
     //printf("OurAlgo\n");
     uint8_t* pBits = (uint8_t*)kpBuf;
     
-    for(int i=0;(i+4)<iBufSize;  i++, pBits++)
+    for(int i=0;(i+3)<iBufSize;  i++, pBits++)
     {
         
         if(!kpBuf[i] && !kpBuf[i+1] && kpBuf[i+2]==0x1)
@@ -83,7 +86,31 @@ uint8_t* DetectStartCodePrefix (const uint8_t* kpBuf, int32_t* pOffset, int32_t 
         
     }
     return NULL;
-#else
+#elif defined(H264_IGNORED_ALGO)
+    uint8_t *pBits = (uint8_t *)kpBuf;
+    
+    if(iBufSize>=4)
+    {
+        if(kpBuf[0]==0 && kpBuf[1]==0)
+        {
+            if(kpBuf[2]==1)
+            {
+                pBits+=3;
+                *pOffset = (int32_t) (((uintptr_t)pBits) - ((uintptr_t)kpBuf));
+                return pBits;
+            }
+            
+            if(kpBuf[2]==0 && kpBuf[3] == 1)
+            {
+                pBits+=4;
+                *pOffset = (int32_t) (((uintptr_t)pBits) - ((uintptr_t)kpBuf));
+                return pBits;
+
+            }
+        }
+    }
+    return NULL;
+#elif defined(EXISTING_ALGO)
     uint8_t* pBits = (uint8_t*)kpBuf;
 
     do
@@ -110,7 +137,10 @@ uint8_t* DetectStartCodePrefix (const uint8_t* kpBuf, int32_t* pOffset, int32_t 
     while (1);
 
     return NULL;
+#else
+    //Nothing Here
 #endif
+
     
 }
 
@@ -175,6 +205,7 @@ uint8_t* ParseNalHeader (PWelsDecoderContext pCtx, SNalUnitHeader* pNalUnitHeade
 
     pNalUnitHeader->uiNalRefIdc   = (uint8_t) (pNal[0] >> 5);             // uiNalRefIdc
     pNalUnitHeader->eNalUnitType  = (EWelsNalUnitType) (pNal[0] & 0x1f);  // eNalUnitType
+    printf("forbidden_zero_bit , nal_ref_idc, nal_unit_type = %d, %d, %d\n", pNalUnitHeader->uiForbiddenZeroBit, pNalUnitHeader->uiNalRefIdc, pNalUnitHeader->eNalUnitType);
 
     ++pNal;
     --iNalSize;
