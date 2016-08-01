@@ -1231,8 +1231,12 @@ int32_t WelsDecodeSlice (PWelsDecoderContext pCtx, bool bFirstSliceInLayer, PNal
     pCurLayer->pSliceIdc[iNextMbXyIndex] = iSliceIdc;
     pCtx->bMbRefConcealed = false;
     iRet = pDecMbFunc (pCtx,  pNalCur, uiEosFlag);
+
+	iRet = 0;
     pCurLayer->pMbRefConcealedFlag[iNextMbXyIndex] = pCtx->bMbRefConcealed;
     if (iRet != ERR_NONE) {
+
+		printf("fahad--> decode_slice::WelsDecodeSlice   iRet  %d", iRet);
       return iRet;
     }
 

@@ -2168,6 +2168,8 @@ int32_t DecodeCurrentAccessUnit (PWelsDecoderContext pCtx, uint8_t** ppDst, SBuf
                  pCtx->pSps->iNumRefFrames);
         // The error code here need to be separated from the dsOutOfMemory
         pCtx->iErrorCode |= dsOutOfMemory;
+
+		printf("fahad--->> decode_core::DecodeCurrentAccessUnit 2172  dsOutOfMemory: %d  pCtx->iErrorCode--- %d\n", dsOutOfMemory, pCtx->iErrorCode);
         return ERR_INFO_REF_COUNT_OVERFLOW;
       }
       pCtx->pDec->bNewSeqBegin = pCtx->bNewSeqBegin; //set flag for start decoding
@@ -2229,6 +2231,8 @@ int32_t DecodeCurrentAccessUnit (PWelsDecoderContext pCtx, uint8_t** ppDst, SBuf
       pCtx->pFmo = &pCtx->sFmoList[iPpsId];
       if (!FmoParamUpdate (pCtx->pFmo, pLayerInfo.pSps, pLayerInfo.pPps, &pCtx->iActiveFmoNum, pCtx->pMemAlign)) {
         pCtx->iErrorCode |= dsBitstreamError;
+
+		printf("fahad--->> decode_core::DecodeCurrentAccessUnit 2233  dsBitstreamError: %d  pCtx->iErrorCode--- %d\n", dsBitstreamError, pCtx->iErrorCode);
         WelsLog (& (pCtx->sLogCtx), WELS_LOG_WARNING, "DecodeCurrentAccessUnit(), FmoParamUpdate failed, eSliceType: %d.",
                  pSh->eSliceType);
         return GENERATE_ERROR_NO (ERR_LEVEL_SLICE_HEADER, ERR_INFO_FMO_INIT_FAIL);
@@ -2254,12 +2258,13 @@ int32_t DecodeCurrentAccessUnit (PWelsDecoderContext pCtx, uint8_t** ppDst, SBuf
           if (!kbIdrFlag  &&
               pSh->iFrameNum != pCtx->iPrevFrameNum &&
               pSh->iFrameNum != ((pCtx->iPrevFrameNum + 1) & ((1 << dq_cur->sLayerInfo.pSps->uiLog2MaxFrameNum) - 1))) {
-            WelsLog (& (pCtx->sLogCtx), WELS_LOG_WARNING,
-                     "referencing pictures lost due frame gaps exist, prev_frame_num: %d, curr_frame_num: %d", pCtx->iPrevFrameNum,
-                     pSh->iFrameNum);
+            //WelsLog (& (pCtx->sLogCtx), WELS_LOG_WARNING,
+                     printf("fahad--->> decode_core::DecodeCurrentAccessUnit referencing pictures lost due frame gaps exist, prev_frame_num: %d, curr_frame_num: %d  pCtx->iErrorCode--- %d\n", pCtx->iPrevFrameNum,
+						 pSh->iFrameNum, pCtx->iErrorCode);
 
             bAllRefComplete = false;
             pCtx->iErrorCode |= dsRefLost;
+			printf("fahad--->> decode_core::DecodeCurrentAccessUnit 2263  dsRefLost: %d  pCtx->iErrorCode--- %d\n", dsRefLost, pCtx->iErrorCode);
             if (pCtx->eErrorConMethod == ERROR_CON_DISABLE) {
 #ifdef LONG_TERM_REF
               pCtx->bParamSetsLostFlag = true;
@@ -2273,7 +2278,7 @@ int32_t DecodeCurrentAccessUnit (PWelsDecoderContext pCtx, uint8_t** ppDst, SBuf
 
         if (iCurrIdD == kuiDependencyIdMax ) {//&& iCurrIdQ == BASE_QUALITY_ID
           iRet = InitRefPicList (pCtx, uiNalRefIdc, pSh->iPicOrderCntLsb);
-		  LOGE("Decoder current access unit 2268 iRect -- %d", iRet);
+		  LOGE("Decoder current access unit 2268 iRect -- %d  pCtx->iErrorCode--- %d", iRet, pCtx->iErrorCode);
           if (iRet) {
 			 
             pCtx->bRPLRError = true;
@@ -2298,31 +2303,37 @@ int32_t DecodeCurrentAccessUnit (PWelsDecoderContext pCtx, uint8_t** ppDst, SBuf
                    "DecodeCurrentAccessUnit() failed (%d) in frame: %d uiDId: %d uiQId: %d",
                    iRet, pSh->iFrameNum, iCurrIdD, iCurrIdQ);
           bAllRefComplete = false;
+		  printf("fahad---> > decodee_core: ----      2306  iErroreCode %d\n", pCtx->iErrorCode);
           HandleReferenceLostL0 (pCtx, pNalCur);
+		  printf("fahad---> > decodee_core: ----      2308  iErroreCode %d\n", pCtx->iErrorCode);
           if (pCtx->eErrorConMethod == ERROR_CON_DISABLE) {
             if (pCtx->iTotalNumMbRec == 0)
               pCtx->pDec = NULL;
-            return iRet;
+			return iRet;
           }
         }
 
         if (bReconstructSlice) {
+			printf("fahad---> > decodee_core: ----      2317  iErroreCode %d\n", pCtx->iErrorCode);
           if ((iRet = WelsDecodeConstructSlice (pCtx, pNalCur)) != ERR_NONE) {
             pCtx->pDec->bIsComplete = false; // reconstruction error, directly set the flag false
             return iRet;
           }
+		  printf("fahad---> > decodee_core: ----      2322  iErroreCode %d\n", pCtx->iErrorCode);
         }
         if (bAllRefComplete && pCtx->eSliceType != I_SLICE) {
           if (pCtx->sRefPic.uiRefCount[LIST_0] > 0) {
+			  printf("fahad---> > decodee_core: ----      2326  iErroreCode %d\n", pCtx->iErrorCode);
             bAllRefComplete &= CheckRefPicturesComplete (pCtx);
+			printf("fahad---> > decodee_core: ----      2328  iErroreCode %d\n", pCtx->iErrorCode);
           } else {
             bAllRefComplete = false;
           }
         }
       }
 #if defined (_DEBUG) &&  !defined (CODEC_FOR_TESTBED)
-      fprintf (stderr, "cur_frame : %d\tiCurrIdD : %d\n ",
-               dq_cur->sLayerInfo.sSliceInLayer.sSliceHeaderExt.sSliceHeader.iFrameNum, iCurrIdD);
+      fprintf (stderr, "wels-Debug- cur_frame : %d\tiCurrIdD : %d   pCtx->iErrorCode  %d\n\n ",
+		  dq_cur->sLayerInfo.sSliceInLayer.sSliceHeaderExt.sSliceHeader.iFrameNum, iCurrIdD, pCtx->iErrorCode);
 #endif//#if !CODEC_FOR_TESTBED
       iLastIdD = iCurrIdD;
       iLastIdQ = iCurrIdQ;
@@ -2344,15 +2355,19 @@ int32_t DecodeCurrentAccessUnit (PWelsDecoderContext pCtx, uint8_t** ppDst, SBuf
     // Set the current dec picture complete flag. The flag will be reset when current picture need do ErrorCon.
     pCtx->pDec->bIsComplete = bAllRefComplete;
     if (!pCtx->pDec->bIsComplete) {  // Ref pictures ECed, result in ECed
+
+		printf("fahad---> > decodee_core: ----      2359  iErroreCode %d  dsDataErrorConcealed %d\n", pCtx->iErrorCode, dsDataErrorConcealed);
       pCtx->iErrorCode |= dsDataErrorConcealed;
+
+	  printf("fahad---> > decodee_core: ----      2362  iErroreCode %d dsDataErrorConcealed %d\n", pCtx->iErrorCode, dsDataErrorConcealed);
     }
 
     // A dq layer decoded here
 #if defined (_DEBUG) &&  !defined (CODEC_FOR_TESTBED)
 #undef fprintf
-    fprintf (stderr, "POC: #%d, FRAME: #%d, D: %d, Q: %d, T: %d, P: %d, %d\n",
+    fprintf (stderr, "Wels-Debug - POC: #%d, FRAME: #%d, D: %d, Q: %d, T: %d, P: %d, %d    iErrrorCode  %d\n",
              pSh->iPicOrderCntLsb, pSh->iFrameNum, iCurrIdD, iCurrIdQ, dq_cur->sLayerInfo.sNalHeaderExt.uiTemporalId,
-             dq_cur->sLayerInfo.sNalHeaderExt.uiPriorityId, dq_cur->sLayerInfo.sSliceInLayer.sSliceHeaderExt.sSliceHeader.iSliceQp);
+             dq_cur->sLayerInfo.sNalHeaderExt.uiPriorityId, dq_cur->sLayerInfo.sSliceInLayer.sSliceHeaderExt.sSliceHeader.iSliceQp, pCtx->iErrorCode);
 #endif//#if !CODEC_FOR_TESTBED
 
     if (dq_cur->uiLayerDqId == kuiTargetLayerDqId) {

@@ -726,6 +726,12 @@ int32_t WelsDecodeBs (PWelsDecoderContext pCtx, const uint8_t* kpBsBuf, const in
         pDstNal = pRawData->pCurPos;
 
         bool bNalStartBytes = false;
+		printf("\nfahad-> ");
+		for (int i = 0; i < 100; i++)
+		{
+			printf("%x , ", kpBsBuf[i]);
+		}
+		printf("\n\n");
 
         while (iSrcConsumed < iSrcLength)
         {

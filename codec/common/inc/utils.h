@@ -59,7 +59,8 @@ typedef void (*PWelsLogCallbackFunc) (void* pCtx, const int32_t iLevel, const ch
 //#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
 #define LOGE(...)
 #else
-#define LOGE(...)
+
+#define LOGE(...) printf(__VA_ARGS__);printf("\n")
 #endif
 
 typedef struct TagLogContext {

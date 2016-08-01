@@ -203,14 +203,17 @@ int32_t WelsReorderRefList (PWelsDecoderContext pCtx) {
     return ERR_INFO_REFERENCE_PIC_LOST;
   }
 
+ 
   if (pRefPicListReorderSyn->bRefPicListReorderingFlag[LIST_0]) {
+	  LOGE("fahad-->> manage_dec_dec_ref::WelsReorderRefList 207 %d %d  , pCtx->iErrorCode = %d", i, pRefPicListReorderSyn->bRefPicListReorderingFlag[LIST_0], pCtx->iErrorCode);
     while ((iReorderingIndex < iMaxRefIdx)
            && (pRefPicListReorderSyn->sReorderingSyn[LIST_0][iReorderingIndex].uiReorderingOfPicNumsIdc != 3)) {
-      uint16_t uiReorderingOfPicNumsIdc =
-        pRefPicListReorderSyn->sReorderingSyn[LIST_0][iReorderingIndex].uiReorderingOfPicNumsIdc;
+		uint16_t uiReorderingOfPicNumsIdc = 0;
+        //pRefPicListReorderSyn->sReorderingSyn[LIST_0][iReorderingIndex].uiReorderingOfPicNumsIdc;
+		LOGE("fahad-->> manage_dec_dec_ref::WelsReorderRefList 211 %d %d   iReorderingIndex %d  LIST_0  %d  ,  pCtx->iErrorCode =  %d", i, uiReorderingOfPicNumsIdc, iReorderingIndex, LIST_0, pCtx->iErrorCode);
       if (uiReorderingOfPicNumsIdc < 2) {
 
-		  LOGE("fahad-->> manage_dec_dec_ref::WelsReorderRefList 212 %d", i);
+		  LOGE("fahad-->> manage_dec_dec_ref::WelsReorderRefList 212 %d  pCtx->iErrorCode == %d", i, pCtx->iErrorCode);
         iAbsDiffPicNum = pRefPicListReorderSyn->sReorderingSyn[LIST_0][iReorderingIndex].uiAbsDiffPicNumMinus1 + 1;
 
         if (uiReorderingOfPicNumsIdc == 0) {
@@ -222,12 +225,15 @@ int32_t WelsReorderRefList (PWelsDecoderContext pCtx) {
 
 		bool isMiss = true;
         for (i = iMaxRefIdx - 1; i >= 0; i--) {
-			if (ppRefList[i] != NULL) LOGE("fahad-->> manage_dec_dec_ref::WelsReorderRefList 224 %d iMaxRefIdx-1 %d   ppRefList[i]->iFrameNum %d , iPredFrameNum %d , ppRefList[i]->bIsLongRef %d", i, iMaxRefIdx - 1, ppRefList[i]->iFrameNum, iPredFrameNum, ppRefList[i]->bIsLongRef);
-          
+			if (ppRefList[i] != NULL) LOGE("fahad-->> manage_dec_dec_ref::WelsReorderRefList 224 %d iMaxRefIdx-1 %d   ppRefList[i]->iFrameNum %d , iPredFrameNum %d , ppRefList[i]->bIsLongRef %d  pCtx->iErrorCode  %d", i, iMaxRefIdx - 1, ppRefList[i]->iFrameNum, iPredFrameNum, ppRefList[i]->bIsLongRef, pCtx->iErrorCode);
+			if (ppRefList[i] != NULL && ppRefList[i]->iFrameNum == iPredFrameNum && ppRefList[i]->bIsLongRef && ppRefList[i]->iFrameNum == 0)
+			{
+				ppRefList[i]->bIsLongRef = false;
+			}
 			if (ppRefList[i] != NULL && ppRefList[i]->iFrameNum == iPredFrameNum && !ppRefList[i]->bIsLongRef) {
 				isMiss = false;
 				iRefFrameForMissFramePrediction = iPredFrameNum;
-			  LOGE("fahad-->> manage_dec_dec_ref::WelsReorderRefList 224 break  %d", i);
+				LOGE("fahad-->> manage_dec_dec_ref::WelsReorderRefList 224 break  %d  pCtx->iErrorCode  %d", i, pCtx->iErrorCode);
             if ((pNalHeaderExt->uiQualityId == ppRefList[i]->uiQualityId)
                 && (pSliceHeader->iSpsId != ppRefList[i]->iSpsId)) {   //check;
               WelsLog (& (pCtx->sLogCtx), WELS_LOG_WARNING, "WelsReorderRefList()::::BASE LAYER::::iSpsId:%d, ref_sps_id:%d",
@@ -236,7 +242,7 @@ int32_t WelsReorderRefList (PWelsDecoderContext pCtx) {
 			  LOGE("fahad-->> manage_dec_dec_ref::WelsReorderRefList 227 ERR_INFO_REFERENCE_PIC_LOST -- %d", ERR_INFO_REFERENCE_PIC_LOST);
               return ERR_INFO_REFERENCE_PIC_LOST;
             } else {
-				LOGE("fahad-->> manage_dec_dec_ref::WelsReorderRefList 233 break %d", i);
+				LOGE("fahad-->> manage_dec_dec_ref::WelsReorderRefList 233 break %d   pCtx->iErrorCode  %d", i, pCtx->iErrorCode);
               break;
             }
 
@@ -258,7 +264,7 @@ int32_t WelsReorderRefList (PWelsDecoderContext pCtx) {
 		}
 		else{
 			if (ppRefList[i] != NULL) {
-				LOGE("fahad-->> manage_dec_dec_ref::WelsReorderRefList 547 *___************* %d iMaxRefIdx-1 %d   ppRefList[i]->iFrameNum %d , iPredFrameNum %d , ppRefList[i]->bIsLongRef %d", i, iMaxRefIdx - 1, ppRefList[i]->iFrameNum, iPredFrameNum, ppRefList[i]->bIsLongRef);
+				LOGE("fahad-->> manage_dec_dec_ref::WelsReorderRefList 547 *___************* %d iMaxRefIdx-1 %d   ppRefList[i]->iFrameNum %d , iPredFrameNum %d , ppRefList[i]->bIsLongRef %d   pCtx->iErrorCode  %d", i, iMaxRefIdx - 1, ppRefList[i]->iFrameNum, iPredFrameNum, ppRefList[i]->bIsLongRef, pCtx->iErrorCode);
 			}
 			else{
 				LOGE("fahad-->> manage_dec_dec_ref::WelsReorderRefList 260 null ****_____************ %d", i);
@@ -303,7 +309,7 @@ int32_t WelsReorderRefList (PWelsDecoderContext pCtx) {
       iReorderingIndex++;
     }
   }
-  LOGE("fahad-->> manage_dec_dec_ref::WelsReorderRefList 270 ERR_NONE -- %d", ERR_NONE);
+  LOGE("fahad-->> manage_dec_dec_ref::WelsReorderRefList 270 ERR_NONE -- %d  iErrorCode  %d", ERR_NONE, pCtx->iErrorCode);
   return ERR_NONE;
 }
 
@@ -329,8 +335,10 @@ int32_t WelsMarkAsRef (PWelsDecoderContext pCtx) {
     }
   }
   if (bIsIDRAU) {
+	  printf("fahad------------------>>manage_dec_ref 338 bIsIDRAU = %d  pRefPicMarking->bLongTermRefFlag =  %d\n", bIsIDRAU, pRefPicMarking->bLongTermRefFlag);
     if (pRefPicMarking->bLongTermRefFlag) {
       pCtx->sRefPic.iMaxLongTermFrameIdx = 0;
+	  
       AddLongTermToList (pRefPic, pCtx->pDec, 0);
     } else {
       pCtx->sRefPic.iMaxLongTermFrameIdx = -1;
@@ -412,6 +420,7 @@ static int32_t MMCOProcess (PWelsDecoderContext pCtx, uint32_t uiMmcoType,
   int32_t i = 0;
   int32_t iRet = ERR_NONE;
 
+  printf("fahad------------------>>manage_dec_ref::MMCOProcess 423   %d\n", uiMmcoType);
   switch (uiMmcoType) {
   case MMCO_SHORT2UNUSED:
     pPic = WelsDelShortFromListSetUnref (pRefPic, iShortFrameNum);
@@ -470,6 +479,8 @@ static int32_t MMCOProcess (PWelsDecoderContext pCtx, uint32_t uiMmcoType,
     WelsLog (& (pCtx->sLogCtx), WELS_LOG_INFO, "ex_mark_avc():::MMCO_LONG:::LTR marking....iFrameNum: %d",
              pCtx->iFrameNum);
 #endif
+
+	
     iRet = AddLongTermToList (pRefPic, pCtx->pDec, iLongTermFrameIdx);
     break;
   default :
@@ -616,6 +627,8 @@ static int32_t MarkAsLongTerm (PRefPic pRefPic, int32_t iFrameNum, int32_t iLong
 
   for (i = 0; i < pRefPic->uiRefCount[LIST_0]; i++) {
     pPic = pRefPic->pRefList[LIST_0][i];
+
+	printf("fahad------------------>>manage_dec_ref::MarkAsLongTerm 631   %d -- %d -- %d\n", pPic->iFrameNum, iFrameNum, pPic->bIsLongRef);
     if (pPic->iFrameNum == iFrameNum && !pPic->bIsLongRef) {
       iRet = AddLongTermToList (pRefPic, pPic, iLongTermFrameIdx);
       break;
